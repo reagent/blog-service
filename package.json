@@ -4,6 +4,12 @@
   "main": "dist/index.js",
   "author": "Patrick Reagan <github@the-reagans.com>",
   "license": "MIT",
+  "prettier": {
+    "singleQuote": true,
+    "tabWidth": 2,
+    "printWidth": 80,
+    "useTabs": false
+  },
   "devDependencies": {
     "@tsconfig/node18": "^1.0.1",
     "@types/node": "^18.11.18",
