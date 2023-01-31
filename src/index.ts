@@ -1,7 +1,7 @@
-import { createPool } from 'slonik';
 import dotenv from 'dotenv';
 
 import { createApp } from './app';
+import { connect } from './db/connect';
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ if (!DATABASE_URL) {
 }
 
 (async () => {
-  const pool = await createPool(DATABASE_URL);
+  const pool = await connect(DATABASE_URL);
   const app = createApp({ pool });
 
   app.listen(PORT, () => console.log(`Listening on port: ${PORT}`));

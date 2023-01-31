@@ -1,12 +1,13 @@
 import { randomUUID } from 'crypto';
 import { Express } from 'express';
-import { DatabasePool, createPool, createSqlTag } from 'slonik';
+import { DatabasePool, createSqlTag } from 'slonik';
 import { z } from 'zod';
 import supertest from 'supertest';
 import HttpStatus from 'http-status';
 
 import { DATABASE_URL } from './env';
 import { createApp } from '../src/app';
+import { connect } from '../src/db/connect';
 
 const sql = createSqlTag({ typeAliases: { uuid: z.string() } });
 
@@ -14,7 +15,7 @@ describe('Authorization Endpoints', () => {
   let app: Express;
   let pool: DatabasePool;
 
-  beforeAll(async () => (pool = await createPool(DATABASE_URL!)));
+  beforeAll(async () => (pool = await connect(DATABASE_URL!)));
   afterAll(async () => await pool.end());
 
   beforeEach(async () => {
