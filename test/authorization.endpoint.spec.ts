@@ -1,15 +1,14 @@
 import { randomUUID } from 'crypto';
 import { Express } from 'express';
-import { DatabasePool, createSqlTag } from 'slonik';
-import { z } from 'zod';
+import { DatabasePool } from 'slonik';
+
 import supertest from 'supertest';
 import HttpStatus from 'http-status';
 
 import { DATABASE_URL } from './env';
 import { createApp } from '../src/app';
 import { connect } from '../src/db/connect';
-
-const sql = createSqlTag({ typeAliases: { uuid: z.string() } });
+import { sql } from '../src/db/schema';
 
 describe('Authorization Endpoints', () => {
   let app: Express;
@@ -51,10 +50,9 @@ describe('Authorization Endpoints', () => {
     });
 
     it('responds with a 200 (success) when given a valid API key', async () => {
-      const token = z.object({ value: z.string() });
-
       const { value: apiKey } = await pool.one(
-        sql.type(token)`INSERT INTO tokens DEFAULT VALUES RETURNING value`
+        sql.typeAlias('token')`
+          INSERT INTO tokens DEFAULT VALUES RETURNING value`
       );
 
       const response = await supertest(app)
