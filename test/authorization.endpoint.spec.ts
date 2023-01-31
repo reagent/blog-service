@@ -1,5 +1,3 @@
-import dotenv from 'dotenv';
-import path from 'path';
 import { randomUUID } from 'crypto';
 import { Express } from 'express';
 import { DatabasePool, createPool, createSqlTag } from 'slonik';
@@ -7,11 +5,8 @@ import { z } from 'zod';
 import supertest from 'supertest';
 import HttpStatus from 'http-status';
 
+import { DATABASE_URL } from './env';
 import { createApp } from '../src/app';
-
-dotenv.config({ path: path.resolve(__dirname, '..', '.env.test') });
-
-const { DATABASE_URL } = process.env;
 
 const sql = createSqlTag({ typeAliases: { uuid: z.string() } });
 
