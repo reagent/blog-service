@@ -1,41 +1,35 @@
 import express, { Express, json } from 'express';
-import { DatabasePool, createSqlTag } from 'slonik';
-import { z } from 'zod';
+import { DatabasePool } from 'slonik';
 import HttpStatus from 'http-status';
+
+import { PostsService } from './app/services/posts.service';
+import { authorization } from './app/middleware/authorization';
 
 export const createApp = (options: { pool: DatabasePool }): Express => {
   const { pool } = options;
 
   const app = express();
-  app.use(json());
 
-  const sql = createSqlTag({
-    typeAliases: { uuid: z.string() },
-  });
+  app.use(json());
+  app.use(authorization(pool));
 
   app.get('/authorization/status', async (req, resp) => {
-    let status: number = HttpStatus.UNAUTHORIZED;
+    // Authorization middleware will respond with unauthorized status
+    resp.status(HttpStatus.OK).end();
+  });
 
-    const authHeader = req.header('authorization');
+  app.post('/posts', async (req, resp) => {
+    const { CREATED, UNPROCESSABLE_ENTITY } = HttpStatus;
 
-    if (authHeader) {
-      const match = authHeader.match(/^api-key\s+(?<apiKey>\S+)$/i);
+    const service = new PostsService({ pool });
+    const { instance: post, errors } = await service.create(req.body);
 
-      if (match) {
-        const { apiKey } = match.groups!;
-
-        const id = await pool.maybeOne(
-          sql.typeAlias(
-            'uuid'
-          )`SELECT value FROM tokens WHERE value::text = ${apiKey}`
-        );
-
-        if (id) {
-          status = HttpStatus.OK;
-        }
-      }
+    if (errors) {
+      resp.status(UNPROCESSABLE_ENTITY).send({ errors }).end();
+      return;
     }
-    resp.status(status).end();
+
+    resp.status(CREATED).send(post).end();
   });
 
   return app;
