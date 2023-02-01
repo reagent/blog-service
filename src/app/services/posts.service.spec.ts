@@ -4,6 +4,7 @@ import { DATABASE_URL } from '../../../test/env';
 import { PostsService } from './posts.service';
 import { connect } from '../../db/connect';
 import { sql } from '../../db/schema';
+import { createPost } from '../../../test/factories';
 
 describe(PostsService.name, () => {
   let pool: DatabasePool;
@@ -25,6 +26,29 @@ describe(PostsService.name, () => {
 
     return count;
   };
+
+  describe('all()', () => {
+    it('returns an empty array when there are no posts', async () => {
+      expect(subject.all()).resolves.toEqual([]);
+    });
+
+    it('returns a list of posts descending by publication date', async () => {
+      const older = await createPost({
+        pool,
+        post: { publishedAt: new Date('2021-01-01') },
+      });
+
+      const newer = await createPost({
+        pool,
+        post: { publishedAt: new Date('2022-01-01') },
+      });
+
+      expect(subject.all()).resolves.toMatchObject([
+        { id: newer.id },
+        { id: older.id },
+      ]);
+    });
+  });
 
   describe('create()', () => {
     it('does not create a record and returns error messages when the post is invalid', async () => {
