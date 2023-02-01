@@ -18,6 +18,22 @@ export const createApp = (options: { pool: DatabasePool }): Express => {
     resp.status(HttpStatus.OK).end();
   });
 
+  app.get('/posts/:id', async (req, resp) => {
+    const { OK, NOT_FOUND } = HttpStatus;
+    const service = new PostsService({ pool });
+
+    const { id } = req.params;
+
+    const post = await service.find(id);
+
+    if (!post) {
+      resp.status(NOT_FOUND).end();
+      return;
+    }
+
+    resp.status(OK).send(post).end();
+  });
+
   app.get('/posts', async (_, resp) => {
     const service = new PostsService({ pool });
     const posts = await service.all();

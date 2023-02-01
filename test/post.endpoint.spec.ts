@@ -30,6 +30,54 @@ describe('Post Endpoints', () => {
 
   afterEach(async () => await pool.query(sql.unsafe`ROLLBACK`));
 
+  describe('GET /posts/:id', () => {
+    it('responds with 401 (unauthorized) when provided with a non-existent API key', async () => {
+      const apiKey = randomUUID();
+      const id = randomUUID();
+
+      const response = await supertest(app)
+        .get(`/posts/${id}`)
+        .set({ Authorization: `Api-Key ${apiKey}` });
+
+      expect(response.status).toEqual(HttpStatus.UNAUTHORIZED);
+    });
+
+    describe('with a valid API key', () => {
+      let apiKey: string;
+
+      beforeEach(async () => (apiKey = await createApiKey(pool)));
+
+      it('responds with 404 (not found) and an empty body when there is no post for the ID', async () => {
+        const id = randomUUID();
+
+        const response = await supertest(app)
+          .get(`/posts/${id}`)
+          .set({ Authorization: `Api-Key ${apiKey}` });
+
+        expect(response.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(response.body).toEqual({});
+      });
+
+      it('responds with 200 (ok) and the post when there is a post for the provided ID', async () => {
+        const { id } = await createPost({
+          pool,
+          post: { title: 'Title', body: 'Body' },
+        });
+
+        const response = await supertest(app)
+          .get(`/posts/${id}`)
+          .set({ Authorization: `Api-Key ${apiKey}` });
+
+        expect(response.status).toEqual(HttpStatus.OK);
+        expect(response.body).toMatchObject({
+          id,
+          title: 'Title',
+          body: 'Body',
+        });
+      });
+    });
+  });
+
   describe('GET /posts', () => {
     it('responds with 401 (unauthorized) when provided with a non-existent API key', async () => {
       const apiKey = randomUUID();
