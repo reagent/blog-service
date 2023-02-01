@@ -33,11 +33,25 @@ type PostRecord = {
 
 type CreateResult = { instance: PostRecord | null; errors: Errors | null };
 
-export class PostsService {
+class PostsService {
   protected pool: DatabasePool;
 
   constructor(options: { pool: DatabasePool }) {
     this.pool = options.pool;
+  }
+
+  all(): Promise<Readonly<PostRecord[]>> {
+    const query = sql.typeAlias('post')`
+      SELECT   id,
+               title,
+               body,
+               published_at AS "publishedAt",
+               created_at AS "createdAt",
+               updated_at AS "updatedAt"
+      FROM     posts
+      ORDER BY published_at DESC`;
+
+    return this.pool.any(query);
   }
 
   async create(input: object): Promise<CreateResult> {
@@ -68,3 +82,5 @@ export class PostsService {
     };
   }
 }
+
+export { PostRecord, PostsService };
