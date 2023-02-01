@@ -40,6 +40,20 @@ class PostsService {
     this.pool = options.pool;
   }
 
+  find(id: UUID): Promise<PostRecord | null> {
+    const query = sql.typeAlias('post')`
+      SELECT id,
+             title,
+             body,
+             published_at AS "publishedAt",
+             created_at AS "createdAt",
+             updated_at AS "updatedAt"
+      FROM   posts
+      WHERE  id::text = ${id}`;
+
+    return this.pool.maybeOne(query);
+  }
+
   all(): Promise<Readonly<PostRecord[]>> {
     const query = sql.typeAlias('post')`
       SELECT   id,
