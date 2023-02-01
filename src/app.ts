@@ -18,6 +18,13 @@ export const createApp = (options: { pool: DatabasePool }): Express => {
     resp.status(HttpStatus.OK).end();
   });
 
+  app.get('/posts', async (_, resp) => {
+    const service = new PostsService({ pool });
+    const posts = await service.all();
+
+    resp.status(HttpStatus.OK).send(posts).end();
+  });
+
   app.post('/posts', async (req, resp) => {
     const { CREATED, UNPROCESSABLE_ENTITY } = HttpStatus;
 

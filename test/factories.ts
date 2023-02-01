@@ -3,6 +3,14 @@ import { DatabasePool } from 'slonik';
 import { PostRecord } from '../src/app/services/posts.service';
 import { sql } from '../src/db/schema';
 
+const createApiKey = async (pool: DatabasePool): Promise<string> => {
+  const { value: apiKey } = await pool.one(
+    sql.typeAlias('token')`INSERT INTO tokens DEFAULT VALUES RETURNING value`
+  );
+
+  return apiKey;
+};
+
 const createPost = async (options: {
   pool: DatabasePool;
   post: Partial<PostRecord>;
@@ -27,4 +35,4 @@ const createPost = async (options: {
               updated_at AS "updatedAt"`);
 };
 
-export { createPost };
+export { createApiKey, createPost };
