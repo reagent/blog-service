@@ -13,7 +13,7 @@ const createApiKey = async (pool: DatabasePool): Promise<string> => {
 
 const createPost = async (options: {
   pool: DatabasePool;
-  post: Partial<PostRecord>;
+  post?: Partial<PostRecord>;
 }): Promise<PostRecord> => {
   const { pool, post: overrides } = options;
 
