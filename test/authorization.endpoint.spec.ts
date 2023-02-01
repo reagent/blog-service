@@ -9,6 +9,7 @@ import { DATABASE_URL } from './env';
 import { createApp } from '../src/app';
 import { connect } from '../src/db/connect';
 import { sql } from '../src/db/schema';
+import { createApiKey } from './factories';
 
 describe('Authorization Endpoints', () => {
   let app: Express;
@@ -50,10 +51,7 @@ describe('Authorization Endpoints', () => {
     });
 
     it('responds with a 200 (success) when given a valid API key', async () => {
-      const { value: apiKey } = await pool.one(
-        sql.typeAlias('token')`
-          INSERT INTO tokens DEFAULT VALUES RETURNING value`
-      );
+      const apiKey = await createApiKey(pool);
 
       const response = await supertest(app)
         .get('/authorization/status')
