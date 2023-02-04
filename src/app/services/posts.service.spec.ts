@@ -112,4 +112,56 @@ describe(PostsService.name, () => {
       });
     });
   });
+
+  describe('update()', () => {
+    it('returns no post and errors when the update is invalid', async () => {
+      const existing = await createPost({ pool });
+
+      const { instance, errors } = await subject.update(existing, {
+        title: '',
+        publishedAt: 'wut',
+      });
+
+      expect(instance).toBeNull();
+      expect(errors).toEqual({
+        title: ['must be supplied'],
+        publishedAt: ['must be a valid date'],
+      });
+    });
+
+    it('updates the post and returns the new attributes when the update is successful', async () => {
+      const existing = await createPost({
+        pool,
+        post: {
+          title: 'Old Title',
+          body: 'Old Body',
+          publishedAt: new Date('2022-01-01T00:00:00Z'),
+        },
+      });
+
+      const { instance, errors } = await subject.update(existing, {
+        title: 'New Title',
+        body: 'New Body',
+        publishedAt: new Date('2023-01-01T00:00:00Z'),
+      });
+
+      expect(errors).toBeNull();
+
+      expect(instance).toMatchObject({
+        id: existing.id,
+        title: 'New Title',
+        body: 'New Body',
+        publishedAt: new Date('2023-01-01T00:00:00.000Z'),
+      });
+
+      const updated = await subject.find(existing.id);
+
+      expect(updated).toMatchObject({
+        id: existing.id,
+        title: 'New Title',
+        body: 'New Body',
+        publishedAt: new Date('2023-01-01T00:00:00.000Z'),
+      });
+    });
+  });
 });
