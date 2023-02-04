@@ -55,5 +55,26 @@ export const createApp = (options: { pool: DatabasePool }): Express => {
     resp.status(CREATED).send(post).end();
   });
 
+  app.put('/posts/:id', async (req, resp) => {
+    const { NOT_FOUND, OK, UNPROCESSABLE_ENTITY } = HttpStatus;
+
+    const service = new PostsService({ pool });
+    const existing = await service.find(req.params.id);
+
+    if (!existing) {
+      resp.status(NOT_FOUND).end();
+      return;
+    }
+
+    const { instance: post, errors } = await service.update(existing, req.body);
+
+    if (errors) {
+      resp.status(UNPROCESSABLE_ENTITY).send({ errors }).end();
+      return;
+    }
+
+    resp.status(OK).send(post).end();
+  });
+
   return app;
 };

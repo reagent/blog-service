@@ -10,6 +10,7 @@ import { createApp } from '../src/app';
 import { connect } from '../src/db/connect';
 import { sql } from '../src/db/schema';
 import { createApiKey, createPost } from './factories';
+import { PostsService } from '../src/app/services/posts.service';
 
 const datePatternFor = (input: Date): RegExp => {
   const pattern = input.toISOString().replace(/(\.)\d+(\w+)?$/, '$1\\d+$2');
@@ -202,6 +203,77 @@ describe('Post Endpoints', () => {
         });
 
         expect(response.status).toEqual(HttpStatus.CREATED);
+      });
+    });
+
+    describe('PUT /posts/:id', () => {
+      it('responds with 401 (unauthorized) when provided with a non-existent API key', async () => {
+        const id = randomUUID();
+        const apiKey = randomUUID();
+
+        const response = await supertest(app)
+          .put(`/posts/${id}`)
+          .set({ Authorization: `Api-Key ${apiKey}` });
+
+        expect(response.status).toEqual(HttpStatus.UNAUTHORIZED);
+      });
+
+      describe('with a valid API key', () => {
+        let apiKey: string;
+
+        beforeEach(async () => (apiKey = await createApiKey(pool)));
+
+        it('responds with a 404 (not found) when the post does not exist', async () => {
+          const id = randomUUID();
+
+          const response = await supertest(app)
+            .put(`/posts/${id}`)
+            .set({ Authorization: `Api-Key ${apiKey}` });
+
+          expect(response.status).toBe(HttpStatus.NOT_FOUND);
+          expect(response.body).toEqual({});
+        });
+
+        it('responds with a 422 (unprocessable entity) when the update fails', async () => {
+          const { id } = await createPost({ pool });
+
+          const response = await supertest(app)
+            .put(`/posts/${id}`)
+            .set({ Authorization: `Api-Key ${apiKey}` })
+            .send({ title: '', publishedAt: 'wut' });
+
+          expect(response.status).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
+          expect(response.body).toEqual({
+            errors: {
+              publishedAt: ['must be a valid date'],
+              title: ['must be supplied'],
+            },
+          });
+        });
+
+        it('responds with a 200 (ok) and updates the post when successful', async () => {
+          const { id } = await createPost({
+            pool,
+            post: { title: 'Old', body: 'Old' },
+          });
+
+          const response = await supertest(app)
+            .put(`/posts/${id}`)
+            .set({ Authorization: `Api-Key ${apiKey}` })
+            .send({ title: 'New' });
+
+          expect(response.status).toEqual(HttpStatus.OK);
+          expect(response.body).toMatchObject({
+            id: id,
+            title: 'New',
+            body: 'Old',
+          });
+
+          const service = new PostsService({ pool });
+          const updated = await service.find(id);
+
+          expect(updated).toMatchObject({ title: 'New', body: 'Old' });
+        });
       });
     });
   });
