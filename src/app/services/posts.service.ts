@@ -15,11 +15,21 @@ class Post {
 
   @IsNotEmpty({ message: 'must be supplied' })
   body!: string;
+}
 
+class PostCreate extends Post {
   @IsOptional()
-  @IsDate()
+  @IsDate({ message: 'must be a valid date' })
   @Type(() => Date)
   publishedAt?: Date;
+}
+
+class PostUpdate extends Post {
+  id!: UUID;
+
+  @IsDate({ message: 'must be a valid date' })
+  @Type(() => Date)
+  publishedAt!: Date;
 }
 
 type PostRecord = {
@@ -31,7 +41,7 @@ type PostRecord = {
   updatedAt: Date;
 };
 
-type CreateResult = { instance: PostRecord | null; errors: Errors | null };
+type Result = { instance: PostRecord | null; errors: Errors | null };
 
 class PostsService {
   protected pool: DatabasePool;
@@ -68,10 +78,10 @@ class PostsService {
     return this.pool.any(query);
   }
 
-  async create(input: object): Promise<CreateResult> {
+  async create(input: object): Promise<Result> {
     let instance: PostRecord | null = null;
 
-    const post = plainToClass(Post, input);
+    const post = plainToClass(PostCreate, input);
     const errors = await validate(post);
 
     const publishedAt = post.publishedAt || new Date();
@@ -94,6 +104,33 @@ class PostsService {
       instance,
       errors,
     };
+  }
+
+  async update(existing: PostRecord, updates: object): Promise<Result> {
+    const instance = plainToClass(PostUpdate, { ...existing, ...updates });
+    const errors = await validate(instance);
+
+    if (errors) {
+      return { instance: null, errors };
+    }
+
+    const stmt = sql.typeAlias('post')`
+      UPDATE    posts
+      SET       title = ${instance.title},
+                body = ${instance.body},
+                published_at = ${sql.timestamp(instance.publishedAt)},
+                updated_at = NOW()
+      WHERE     id = ${instance.id}
+      RETURNING id,
+                title,
+                body,
+                published_at AS "publishedAt",
+                created_at AS "createdAt",
+                updated_at AS "updatedAt"`;
+
+    const result = await this.pool.one(stmt);
+
+    return Promise.resolve({ instance: result, errors });
   }
 }
 
