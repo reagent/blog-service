@@ -12,6 +12,8 @@ import { sql } from '../src/db/schema';
 import { createApiKey, createPost } from './factories';
 import { PostsService } from '../src/app/services/posts.service';
 
+type AuthorizationHeader = { Authorization: `Api-Key ${string}` };
+
 const datePatternFor = (input: Date): RegExp => {
   const pattern = input.toISOString().replace(/(\.)\d+(\w+)?$/, '$1\\d+$2');
   return new RegExp(`^${pattern}$`);
@@ -44,16 +46,17 @@ describe('Post Endpoints', () => {
     });
 
     describe('with a valid API key', () => {
-      let apiKey: string;
+      let headers: AuthorizationHeader;
 
-      beforeEach(async () => (apiKey = await createApiKey(pool)));
+      beforeEach(async () => {
+        const apiKey = await createApiKey(pool);
+        headers = { Authorization: `Api-Key ${apiKey}` };
+      });
 
       it('responds with 404 (not found) and an empty body when there is no post for the ID', async () => {
         const id = faker.datatype.uuid();
 
-        const response = await supertest(app)
-          .get(`/posts/${id}`)
-          .set({ Authorization: `Api-Key ${apiKey}` });
+        const response = await supertest(app).get(`/posts/${id}`).set(headers);
 
         expect(response.status).toEqual(HttpStatus.NOT_FOUND);
         expect(response.body).toEqual({});
@@ -65,9 +68,7 @@ describe('Post Endpoints', () => {
           post: { title: 'Title', body: 'Body' },
         });
 
-        const response = await supertest(app)
-          .get(`/posts/${id}`)
-          .set({ Authorization: `Api-Key ${apiKey}` });
+        const response = await supertest(app).get(`/posts/${id}`).set(headers);
 
         expect(response.status).toEqual(HttpStatus.OK);
         expect(response.body).toMatchObject({
@@ -91,14 +92,15 @@ describe('Post Endpoints', () => {
     });
 
     describe('with a valid API key', () => {
-      let apiKey: string;
+      let headers: AuthorizationHeader;
 
-      beforeEach(async () => (apiKey = await createApiKey(pool)));
+      beforeEach(async () => {
+        const apiKey = await createApiKey(pool);
+        headers = { Authorization: `Api-Key ${apiKey}` };
+      });
 
       it('responds with 200 (success) and an empty array when there are no posts', async () => {
-        const response = await supertest(app)
-          .get('/posts')
-          .set({ Authorization: `Api-Key ${apiKey}` });
+        const response = await supertest(app).get('/posts').set(headers);
 
         expect(response.status).toEqual(HttpStatus.OK);
         expect(response.body).toEqual([]);
@@ -114,9 +116,7 @@ describe('Post Endpoints', () => {
           },
         });
 
-        const response = await supertest(app)
-          .get('/posts')
-          .set({ Authorization: `Api-Key ${apiKey}` });
+        const response = await supertest(app).get('/posts').set(headers);
 
         expect(response.status).toEqual(HttpStatus.OK);
         expect(response.body).toEqual([
@@ -145,14 +145,17 @@ describe('Post Endpoints', () => {
     });
 
     describe('with a valid API key', () => {
-      let apiKey: string;
+      let headers: AuthorizationHeader;
 
-      beforeEach(async () => (apiKey = await createApiKey(pool)));
+      beforeEach(async () => {
+        const apiKey = await createApiKey(pool);
+        headers = { Authorization: `Api-Key ${apiKey}` };
+      });
 
       it('responds with a 422 (unprocessable entity) when validation fails', async () => {
         const response = await supertest(app)
           .post('/posts')
-          .set({ Authorization: `Api-Key ${apiKey}` })
+          .set(headers)
           .send({});
 
         expect(response.status).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -166,13 +169,10 @@ describe('Post Endpoints', () => {
       });
 
       it('responds with 201 (created) and returns the newly-created post resource', async () => {
-        const response = await supertest(app)
-          .post('/posts')
-          .set({ Authorization: `Api-Key ${apiKey}` })
-          .send({
-            title: 'Title',
-            body: 'Body',
-          });
+        const response = await supertest(app).post('/posts').set(headers).send({
+          title: 'Title',
+          body: 'Body',
+        });
 
         const now = datePatternFor(new Date());
 
@@ -189,14 +189,11 @@ describe('Post Endpoints', () => {
       });
 
       it('allows overriding the `publishedAt` timestamp', async () => {
-        const response = await supertest(app)
-          .post('/posts')
-          .set({ Authorization: `Api-Key ${apiKey}` })
-          .send({
-            title: 'Title',
-            body: 'Body',
-            publishedAt: '2021-01-01T00:00:00Z',
-          });
+        const response = await supertest(app).post('/posts').set(headers).send({
+          title: 'Title',
+          body: 'Body',
+          publishedAt: '2021-01-01T00:00:00Z',
+        });
 
         expect(response.body).toMatchObject({
           publishedAt: '2021-01-01T00:00:00.000Z',
@@ -219,16 +216,19 @@ describe('Post Endpoints', () => {
       });
 
       describe('with a valid API key', () => {
-        let apiKey: string;
+        let headers: AuthorizationHeader;
 
-        beforeEach(async () => (apiKey = await createApiKey(pool)));
+        beforeEach(async () => {
+          const apiKey = await createApiKey(pool);
+          headers = { Authorization: `Api-Key ${apiKey}` };
+        });
 
         it('responds with a 404 (not found) when the post does not exist', async () => {
           const id = faker.datatype.uuid();
 
           const response = await supertest(app)
             .put(`/posts/${id}`)
-            .set({ Authorization: `Api-Key ${apiKey}` });
+            .set(headers);
 
           expect(response.status).toBe(HttpStatus.NOT_FOUND);
           expect(response.body).toEqual({});
@@ -239,7 +239,7 @@ describe('Post Endpoints', () => {
 
           const response = await supertest(app)
             .put(`/posts/${id}`)
-            .set({ Authorization: `Api-Key ${apiKey}` })
+            .set(headers)
             .send({ title: '', publishedAt: 'wut' });
 
           expect(response.status).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -259,7 +259,7 @@ describe('Post Endpoints', () => {
 
           const response = await supertest(app)
             .put(`/posts/${id}`)
-            .set({ Authorization: `Api-Key ${apiKey}` })
+            .set(headers)
             .send({ title: 'New' });
 
           expect(response.status).toEqual(HttpStatus.OK);
