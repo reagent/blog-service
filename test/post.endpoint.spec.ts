@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { faker } from '@faker-js/faker';
 import { Express } from 'express';
 import { DatabasePool } from 'slonik';
 
@@ -33,8 +33,8 @@ describe('Post Endpoints', () => {
 
   describe('GET /posts/:id', () => {
     it('responds with 401 (unauthorized) when provided with a non-existent API key', async () => {
-      const apiKey = randomUUID();
-      const id = randomUUID();
+      const apiKey = faker.datatype.uuid();
+      const id = faker.datatype.uuid();
 
       const response = await supertest(app)
         .get(`/posts/${id}`)
@@ -49,7 +49,7 @@ describe('Post Endpoints', () => {
       beforeEach(async () => (apiKey = await createApiKey(pool)));
 
       it('responds with 404 (not found) and an empty body when there is no post for the ID', async () => {
-        const id = randomUUID();
+        const id = faker.datatype.uuid();
 
         const response = await supertest(app)
           .get(`/posts/${id}`)
@@ -81,7 +81,7 @@ describe('Post Endpoints', () => {
 
   describe('GET /posts', () => {
     it('responds with 401 (unauthorized) when provided with a non-existent API key', async () => {
-      const apiKey = randomUUID();
+      const apiKey = faker.datatype.uuid();
 
       const response = await supertest(app)
         .get('/posts')
@@ -135,7 +135,7 @@ describe('Post Endpoints', () => {
 
   describe('POST /posts', () => {
     it('responds with 401 (unauthorized) when provided with a non-existent API key', async () => {
-      const apiKey = randomUUID();
+      const apiKey = faker.datatype.uuid();
 
       const response = await supertest(app)
         .post('/posts')
@@ -208,8 +208,8 @@ describe('Post Endpoints', () => {
 
     describe('PUT /posts/:id', () => {
       it('responds with 401 (unauthorized) when provided with a non-existent API key', async () => {
-        const id = randomUUID();
-        const apiKey = randomUUID();
+        const id = faker.datatype.uuid();
+        const apiKey = faker.datatype.uuid();
 
         const response = await supertest(app)
           .put(`/posts/${id}`)
@@ -224,7 +224,7 @@ describe('Post Endpoints', () => {
         beforeEach(async () => (apiKey = await createApiKey(pool)));
 
         it('responds with a 404 (not found) when the post does not exist', async () => {
-          const id = randomUUID();
+          const id = faker.datatype.uuid();
 
           const response = await supertest(app)
             .put(`/posts/${id}`)
