@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { faker } from '@faker-js/faker';
 import { Express } from 'express';
 import { DatabasePool } from 'slonik';
 
@@ -41,7 +41,7 @@ describe('Authorization Endpoints', () => {
     });
 
     it('responds with a 401 when an non-existent API key is provided', async () => {
-      const apiKey = randomUUID();
+      const apiKey = faker.datatype.uuid();
 
       const response = await supertest(app)
         .get('/authorization/status')

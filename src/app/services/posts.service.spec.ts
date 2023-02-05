@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { faker } from '@faker-js/faker';
 import { DatabasePool } from 'slonik';
 
 import { DATABASE_URL } from '../../../test/env';
@@ -30,7 +30,7 @@ describe(PostsService.name, () => {
 
   describe('find()', () => {
     it('returns `null` when there is no post for the provided ID', () => {
-      expect(subject.find(randomUUID())).resolves.toBeNull();
+      expect(subject.find(faker.datatype.uuid())).resolves.toBeNull();
     });
 
     it('returns the post for the provided ID', async () => {
