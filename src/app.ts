@@ -4,13 +4,22 @@ import HttpStatus from 'http-status';
 
 import { PostsService } from './app/services/posts.service';
 import { authorization } from './app/middleware/authorization';
+import { logging } from './app/middleware/logging';
+import { Loggable, NullLogger } from '@reagent/logging';
+import { LogSource } from './types';
 
-export const createApp = (options: { pool: DatabasePool }): Express => {
-  const { pool } = options;
+type ApplicationOptions = {
+  pool: DatabasePool;
+  logger?: Loggable<LogSource>;
+};
+
+export const createApp = (options: ApplicationOptions): Express => {
+  const { pool, logger = new NullLogger() } = options;
 
   const app = express();
 
   app.use(json());
+  app.use(logging(logger));
   app.use(authorization(pool));
 
   app.get('/authorization/status', async (req, resp) => {
