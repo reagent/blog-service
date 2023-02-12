@@ -643,11 +643,12 @@
     safe-stable-stringify "^2.4.2"
     winston "^3.8.2"
 
-"@reagent/migrator@^0.1.0":
-  version "0.1.0"
-  resolved "https://npm.pkg.github.com/download/@reagent/migrator/0.1.0/7c966d99e2102ae094cf960ddd9f5d9a26ee4008#7c966d99e2102ae094cf960ddd9f5d9a26ee4008"
-  integrity sha512-3uX+34ey9PI51P0bIK9jbqwd+QrQ+s7SqdbcEUxLuPZ9Fp/0iVByGXX0BE1CuVPOgoze4xLVSHrhRjav0e3CGQ==
+"@reagent/migrator@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@reagent/migrator/-/migrator-0.2.0.tgz#8c42459edff08ed4f221b251577882d3cfdfedd7"
+  integrity sha512-8TW1qp6mppUfJPMy/nc7Xmnfxepq7t+QrOAfMGsNReURnDb4rcJRkY8hyvSopU/svAaRxGQVB5QBwgZfya3TPw==
   dependencies:
+    "@reagent/logging" "^0.1.0"
     slonik "^33.0.6"
     slonik-sql-tag-raw "^2.0.0"
 
