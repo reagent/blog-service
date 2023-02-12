@@ -1,11 +1,10 @@
 import path from 'path';
-import dotenv from 'dotenv';
-import { createPool } from 'slonik';
-import { Migrator } from '@reagent/migrator';
 
-dotenv.config();
+import { Migrator, SOURCE as MIGRATOR_SOURCE } from '@reagent/migrator';
+import { createLogger } from '@reagent/logging';
 
-const { DATABASE_URL } = process.env;
+import { connect } from './connect';
+import { DATABASE_URL, loggerOptions } from '../config';
 
 if (!DATABASE_URL) {
   console.error('No database configuration found, please set `DATABASE_URL`');
@@ -14,8 +13,16 @@ if (!DATABASE_URL) {
 
 (async () => {
   const migrationsPath = path.resolve(__dirname, 'migrations');
-  const pool = await createPool(DATABASE_URL);
+  const logger = createLogger(loggerOptions);
+  const pool = await connect(DATABASE_URL, { logger });
 
-  const migrator = new Migrator({ migrationsPath, pool });
+  const migrator = new Migrator({
+    migrationsPath,
+    pool,
+    logger,
+  });
+
+  logger.info('Running migrations', { source: MIGRATOR_SOURCE });
   await migrator.migrate();
+  logger.info('Migrations complete', { source: MIGRATOR_SOURCE });
 })();
